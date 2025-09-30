@@ -1,5 +1,8 @@
 package com.example.insta_share_app.service;
 import com.example.insta_share_app.dtos.*;
+import com.example.insta_share_app.dtos.adminDTOS.GetCommentsADTO;
+import com.example.insta_share_app.dtos.adminDTOS.GetPostsADTO;
+import com.example.insta_share_app.dtos.adminDTOS.GetStoriesADTO;
 import com.example.insta_share_app.entity.*;
 import org.springframework.stereotype.Service;
 //import org.springframework.stereotype.Service;
@@ -14,11 +17,13 @@ public class MapperService {
         dto.setUsername(user.getUsername());
         dto.setFullName(user.getFullName());
         dto.setProfile(toUserProfileDTO(user.getProfile()));
+        dto.setBanned(user.isCurrentlyBanned());
+        dto.setVarified(user.isVarified());
         return dto;
     }
 
     public UserProfileDTO toUserProfileDTO(UserProfile profile) {
-        if (profile == null) return null;
+        if (profile == null ) return null;
         UserProfileDTO dto = new UserProfileDTO();
         dto.setId(profile.getId());
         dto.setUserBio(profile.getUserBio());
@@ -58,8 +63,20 @@ public class MapperService {
         dto.setProfileImageUrl(user.getProfileImageUrl());
         return dto;
     }
+    public AllUsersDTO toAllUserDTO(User user){
+        if (user==null) return null;
+
+        AllUsersDTO dto=new AllUsersDTO();
+        dto.setUserId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setProfileImageUrl(user.getProfileImageUrl());
+        dto.setBanned(user.isCurrentlyBanned());
+        dto.setRoles(user.getRoles());
+        dto.setVarified(user.isVarified());
+        return dto;
+    }
     public PostDTO toPostDTO(Post post) {
-        if (post == null) return null;
+        if (post == null ) return null;
         PostDTO dto = new PostDTO();
         dto.setId(post.getId());
         dto.setImageUrl(post.getImageUrl());
@@ -83,11 +100,14 @@ public class MapperService {
         if(post.getSavedPosts()!=null){
             dto.setSaves(post.getSavedPosts().stream().map(this::toSavedList).collect(Collectors.toList()));
         }
+        if (post.getUserProfile() != null){
+        dto.setVarified(post.getUserProfile().getUser().isVarified());
+        }
         return dto;
     }
 
     public CommentDTO toCommentDTO(Comment comment) {
-        if (comment == null) return null;
+        if (comment == null ) return null;
         CommentDTO dto = new CommentDTO();
         dto.setId(comment.getId());
         dto.setCommentText(comment.getCommentText());
@@ -95,12 +115,13 @@ public class MapperService {
         if (comment.getUser() != null) {
             dto.setUserId(comment.getUser().getId());
             dto.setUsername(comment.getUser().getUsername());
+            dto.setVarified(comment.getUser().isVarified());
         }
         return dto;
     }
 
     public StoryDTO toStoryDTO(Story story) {
-        if (story == null) return null;
+        if (story == null ) return null;
 
         StoryDTO dto = new StoryDTO();
         dto.setId(story.getId());
@@ -109,12 +130,13 @@ public class MapperService {
         if (story.getUserProfile() != null && story.getUserProfile().getUser() != null) {
             dto.setUserId(story.getUserProfile().getUser().getId());
             dto.setUserName(story.getUserProfile().getUser().getUsername());
+            dto.setVarified(story.getUserProfile().getUser().isVarified());
         }
 
         return dto;
     }
     public PostLikesDTO toLikedPosts(Like like){
-        if (like==null) return null;
+        if (like==null ) return null;
         PostLikesDTO dto=new PostLikesDTO();
         dto.setUserId(like.getUser().getId());
         dto.setUsername(like.getUser().getUsername());
@@ -122,7 +144,8 @@ public class MapperService {
         return dto;
     }
     public MySavedPostsDTO toSavedList(SavedPost savedPost){
-        if (savedPost==null) return null;
+
+        if (savedPost==null )  return null;
         MySavedPostsDTO dto=new MySavedPostsDTO();
         dto.setUserId(savedPost.getUser().getId());
         dto.setUsername(savedPost.getUser().getUsername());
@@ -140,7 +163,7 @@ public class MapperService {
         return dto;
     }
     public SavePostDTO toSavedPosts(SavedPost savedPost){
-        if (savedPost==null) return null;
+        if (savedPost==null ) return null;
         SavePostDTO dto=new SavePostDTO();
         if (savedPost.getPost()!=null){
             dto.setPostId(savedPost.getPost().getId());
@@ -149,6 +172,48 @@ public class MapperService {
             dto.setPostByUsername(savedPost.getPost().getUserProfile().getUser().getUsername());
             dto.setPostedByUserProfileUrl(savedPost.getPost().getUserProfile().getProfileImageUrl());
         }
+
+        return dto;
+    }
+    public GetPostsADTO getPostsADTO(Post post){
+        if (post==null ) return null;
+        GetPostsADTO dto=new GetPostsADTO();
+        dto.setId(post.getId());
+        dto.setUserId(post.getUserProfile().getUser().getId());
+        dto.setImageUrl(post.getImageUrl());
+        dto.setUserName(post.getUserProfile().getUser().getUsername());
+        dto.setCreatedAt(post.getCreatedAt());
+        dto.setUserIsBanned(post.getUserProfile().getUser().isCurrentlyBanned());
+        dto.setVarified(post.getUserProfile().getUser().isVarified());
+        dto.setProfileImageUrl(post.getUserProfile().getUser().getProfileImageUrl());
+        dto.setCaption(post.getCaption());
+        dto.setLikesCount(post.getLikesCount());
+        return dto;
+    }
+    public GetStoriesADTO getStoriesForAdmin(Story story){
+        if (story==null ) return null;
+        GetStoriesADTO dto=new GetStoriesADTO();
+        dto.setId(story.getId());
+        dto.setUserId(story.getUserProfile().getUser().getId());
+        dto.setImageUrl(story.getImageUrl());
+        dto.setUserName(story.getUserProfile().getUser().getUsername());
+        dto.setCreatedAt(story.getCreatedAt());
+        dto.setUserIsBanned(story.getUserProfile().getUser().isCurrentlyBanned());
+        dto.setProfileImageUrl(story.getUserProfile().getUser().getProfileImageUrl());
+        dto.setVarified(story.getUserProfile().getUser().isVarified());
+        return dto;
+    }
+    public GetCommentsADTO getCommentsADTO(Comment comment){
+        if (comment==null ) return null;
+        GetCommentsADTO dto=new GetCommentsADTO();
+        dto.setId(comment.getId());
+        dto.setUserId(comment.getUser().getId());
+        dto.setCommentText(comment.getCommentText());
+        dto.setUserName(comment.getUser().getUsername());
+        dto.setCreatedAt(comment.getCreatedAt());
+        dto.setUserIsBanned(comment.getUser().isCurrentlyBanned());
+        dto.setVarified(comment.getUser().isVarified());
+        dto.setProfileImageUrl(comment.getUser().getProfileImageUrl());
 
         return dto;
     }

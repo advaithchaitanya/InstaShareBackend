@@ -12,4 +12,7 @@ public class UserDTO {
     private String username;
     private String fullName;
     private UserProfileDTO profile;
+    private boolean isBanned;
+    private boolean isVarified;
+    private BasicUserDTO isVarifiedBy;
 }

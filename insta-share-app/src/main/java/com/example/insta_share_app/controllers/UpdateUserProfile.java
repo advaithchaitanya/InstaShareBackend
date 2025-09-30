@@ -10,6 +10,7 @@ import com.example.insta_share_app.repositories.UserRepository;
 import com.example.insta_share_app.service.MapperService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -26,6 +27,7 @@ public class UpdateUserProfile {
     private MapperService mapperService;
 
     @PutMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
     private ResponseEntity<UserProfileDTO>updateProfile(@PathVariable String userId,
                                                         @RequestBody UpdateUserProfileDTO dto)
     {

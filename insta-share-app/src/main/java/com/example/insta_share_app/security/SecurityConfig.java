@@ -56,7 +56,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(c->c.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login","/api/auth/register").permitAll()   // allow register/login
+                        .requestMatchers("/api/auth/login","/api/auth/register").permitAll()
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN","OWNER")
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN","OWNER")
+                        .requestMatchers("/api/**").hasAnyRole("USER","ADMIN","OWNER")// allow register/login
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

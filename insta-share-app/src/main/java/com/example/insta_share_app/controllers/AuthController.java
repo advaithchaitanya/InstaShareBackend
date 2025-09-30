@@ -1,9 +1,11 @@
 package com.example.insta_share_app.controllers;
 
+import com.example.insta_share_app.dtos.UserDTO;
 import com.example.insta_share_app.entity.User;
 import com.example.insta_share_app.entity.UserProfile;
 import com.example.insta_share_app.repositories.UserProfileRepository;
 import com.example.insta_share_app.repositories.UserRepository;
+import com.example.insta_share_app.service.MapperService;
 import com.example.insta_share_app.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @CrossOrigin
@@ -22,6 +25,8 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     @Autowired
     private UserProfileRepository userProfileRepository;
+ @Autowired
+    private MapperService mapper;
 
     public AuthController(UserRepository userRepo, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepo = userRepo;
@@ -30,10 +35,16 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        // encode password
+    public ResponseEntity<UserDTO> register(@RequestBody User user) {
+        Optional<User> isExist=userRepo.findByUsername(user.getUsername());
+        if (isExist.isPresent()){
+            throw new RuntimeException("User exists");
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
+        // default role
+        if(user.getRoles() == null || user.getRoles().isEmpty()) {
+            user.getRoles().add("ROLE_USER");
+        }
         // save user first
         User savedUser = userRepo.save(user);
 
@@ -48,7 +59,7 @@ public class AuthController {
         userProfileRepository.save(profile);
 
 
-        return ResponseEntity.ok("User registered with profile!");
+        return ResponseEntity.ok(mapper.toUserDTO(user));
     }
 
 
@@ -58,7 +69,13 @@ public class AuthController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (passwordEncoder.matches(req.get("password"), user.getPassword())) {
             String token = jwtUtil.generateToken(user.getUsername());
-            return ResponseEntity.ok(Map.of("token", token));
+
+
+            return ResponseEntity.ok(Map.of(
+                    "token", token,
+                    "roles", user.getRoles()
+            ));
+
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
     }

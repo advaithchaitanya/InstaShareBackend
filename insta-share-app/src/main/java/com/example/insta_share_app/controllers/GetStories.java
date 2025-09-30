@@ -32,12 +32,18 @@ public class GetStories {
     @GetMapping
     public List<StoryDTO> getAllStories() {
         return storyRepo.findAll().stream()
+                .filter(i -> i.getUserProfile() != null
+                        && i.getUserProfile().getUser() != null
+                        && !i.getUserProfile().getUser().isCurrentlyBanned())
                 .map(mapper::toStoryDTO)
                 .toList();
     }
     @GetMapping("/all")
     public List<UserStoriesDTO> getAllStoriesByGroup() {
         List<StoryDTO> allStories= storyRepo.findAll().stream()
+                .filter(i -> i.getUserProfile() != null
+                        && i.getUserProfile().getUser() != null
+                        && !i.getUserProfile().getUser().isCurrentlyBanned())
                 .map(mapper::toStoryDTO)
                 .toList();
 

@@ -20,5 +20,6 @@ public class PostDTO {
     private LocalDateTime createdAt;
     private List<PostLikesDTO> likes;
     private List<MySavedPostsDTO> saves;
+    private boolean isVarified;
 }
 

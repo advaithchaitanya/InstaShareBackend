@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,5 +14,7 @@ import lombok.NoArgsConstructor;
 public class MyDetailsDTO {
     private String id;
     private String username;
-    private String profileUrl;
+    private String profileImageUrl;
+    private Set<String>roles;
+    private boolean isBanned;
 }
