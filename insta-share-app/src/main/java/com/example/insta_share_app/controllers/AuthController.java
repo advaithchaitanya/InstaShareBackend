@@ -37,7 +37,8 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<UserDTO> register(@RequestBody User user) {
         Optional<User> isExist=userRepo.findByUsername(user.getUsername());
-        if (isExist.isPresent()){
+        if
+        (isExist.isPresent()){
             throw new RuntimeException("User exists");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));

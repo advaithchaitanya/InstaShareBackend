@@ -2,14 +2,21 @@ package com.example.insta_share_app.controllers;
 
 import com.example.insta_share_app.dtos.CommentDTO;
 import com.example.insta_share_app.dtos.PostDTO;
+import com.example.insta_share_app.dtos.PostInputDto;
 import com.example.insta_share_app.entity.*;
 import com.example.insta_share_app.repositories.*;
+import com.example.insta_share_app.service.CloudinaryImageService;
 import com.example.insta_share_app.service.MapperService;
+import org.apache.http.protocol.HTTP;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @CrossOrigin
@@ -23,6 +30,7 @@ public class PostController {
     private final FollowRepository followRepo;
     private final StoryRepository storyRepo;
     private final MapperService mapper;
+    private final CloudinaryImageService cloudinaryImageService;
 
     @Autowired
     public PostController(PostRepository postRepo,
@@ -31,7 +39,8 @@ public class PostController {
                           SavedPostRepository savedPostRepo,
                           FollowRepository followRepo,
                           StoryRepository storyRepo,
-                          MapperService mapper) {
+                          MapperService mapper,
+                          CloudinaryImageService cloudinaryImageService) {
         this.postRepo = postRepo;
         this.userRepo = userRepo;
         this.likeRepo = likeRepo;
@@ -39,20 +48,38 @@ public class PostController {
         this.followRepo = followRepo;
         this.storyRepo = storyRepo;
         this.mapper = mapper;
+        this.cloudinaryImageService=cloudinaryImageService;
     }
 
     // ------------------------ Post ------------------------
     @PostMapping("/create")
-    public ResponseEntity<PostDTO> createPost(@RequestBody Post post, Principal principal) {
+    public ResponseEntity<PostDTO> createPost(@RequestPart("data") PostInputDto postInputDto,@RequestPart(value = "imageFile",required = false)MultipartFile imageFile, Principal principal) {
+        Post post=new Post();
         User user = userRepo.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        post.setCaption(postInputDto.getCaption());
         post.setUserProfile(user.getProfile());
         post.setLikesCount(0); // initialize
+        if (imageFile!=null){
+            Map data=cloudinaryImageService.upload(imageFile);
+            post.setImageUrl((String) data.get("url"));
+
+        }else{
+            post.setImageUrl(postInputDto.getImageUrl());
+        }
         Post saved = postRepo.save(post);
 
         return ResponseEntity.ok(mapper.toPostDTO(saved));
     }
-
+    @PostMapping("/test/upload")
+    public ResponseEntity<Map>test(@RequestParam(value = "imageFile",required = false)MultipartFile file){
+        if (file==null){
+            System.out.println("no");
+            return new ResponseEntity<>(Map.of("no","answer"),HttpStatus.OK);
+        }
+        Map data=cloudinaryImageService.upload(file);
+        return new ResponseEntity<>(data, HttpStatus.OK);
+    }
     // ------------------------ Like ------------------------
     @PostMapping("/{postId}/like")
     public ResponseEntity<?> likePost(@PathVariable String postId, Principal principal) {
@@ -209,10 +236,18 @@ public class PostController {
 
     // ------------------------ Story ------------------------
     @PostMapping("/story")
-    public ResponseEntity<?> postStory(@RequestBody Story story, Principal principal) {
+    public ResponseEntity<?> postStory(@RequestPart("data") String  storyImageUrl,@RequestPart(value = "imageFile",required = false)MultipartFile file, Principal principal) {
+        Story story=new Story();
         User user = userRepo.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         story.setUserProfile(user.getProfile());
+        if (file!=null){
+            Map data=cloudinaryImageService.upload(file);
+            story.setImageUrl((String) data.get("url"));
+
+        }else{
+            story.setImageUrl(storyImageUrl);
+        }
         storyRepo.save(story);
 
         return ResponseEntity.ok(mapper.toStoryDTO(story));

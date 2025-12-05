@@ -1,12 +1,14 @@
 package com.example.insta_share_app.controllers;
 
 import com.example.insta_share_app.dtos.PostDTO;
+import com.example.insta_share_app.entity.Post;
 import com.example.insta_share_app.entity.User;
 import com.example.insta_share_app.repositories.PostRepository;
 import com.example.insta_share_app.repositories.UserRepository;
 import com.example.insta_share_app.service.MapperService;
 import jakarta.persistence.Column;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,7 @@ import java.util.Optional;
 public class GetPosts {
     private final PostRepository postRepo;
     private final MapperService mapper;
+    @Autowired
     private UserRepository userRepository;
 
     public GetPosts(PostRepository postRepo, MapperService mapper) {
@@ -30,17 +33,15 @@ public class GetPosts {
 
     @GetMapping("/{id}")
     public ResponseEntity<PostDTO> getPost(@PathVariable String id) {
-        User user=userRepository.findById(id).orElseThrow(()->new RuntimeException("user not exists"));
+        Post post=postRepo.findById(id).orElseThrow(()->new RuntimeException("no post found"));
+        User user=userRepository.findById(post.getUserProfile().getUser().getId()).orElseThrow(()->new RuntimeException("user not exists"));
 
 
         if (user.isCurrentlyBanned()){
             throw new RuntimeException("user is currently banned");
         }
 
-        return postRepo.findById(id)
-
-                .map(post -> ResponseEntity.ok(mapper.toPostDTO(post)))
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(mapper.toPostDTO(post));
     }
 
     @GetMapping
